@@ -11,15 +11,15 @@ class Pipeline():
             print("Pipeline port is full")
             return
         stage.set_outlink(self.port_base + self.cur_ports)
-        #stage.worker_cls.make(stage.cls_args, stage.in_queue, stage.out_queue,
-        #                      stage.worker_num)
+        stage.worker_cls.make(stage.cls_args, stage.in_queue, stage.out_queue,
+                              stage.worker_num, stage.stage_type)
 
         self.cur_ports+=1
         self.stages.append(stage)
 
 
-    def link_stages(self, src, dest, dependency, arg_tag):
-        dest.add_inlink(port=src.outlink_port, dependency=dependency, arg_tag=arg_tag)
+    def link_stages(self, src, dest, dependency, arg_pos):
+        dest.add_inlink(port=src.outlink_port, dependency=dependency, arg_pos=arg_pos)
 
     def start(self):
         for stage in self.stages:

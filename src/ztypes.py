@@ -1,5 +1,13 @@
+# Stage Type
+SRC = 'SRC'
+NOR = 'NOR'
+DST = 'DST'
+
+# Pipeline State
 STOP = 'STOP'
 RUN = 'RUN'
 PAUSED = 'PAUSED'
+
+# Inlink Detail: dep_and_pos
 DEPENDENCY = 0
-ARG_TAG = 1
+POSITION = 1
