@@ -7,6 +7,7 @@ class Pipeline():
         self.max_ports = max_ports
         self.cur_ports = 0
 
+
     def add_stage(self, stage):
         if stage.stage_type is not DST:
             if self.cur_ports >= self.max_ports:
@@ -26,9 +27,11 @@ class Pipeline():
         else:
             print("stage types are not matched")
 
+
     def start(self):
         for stage in self.stages:
             stage.start()
+
 
     def pause(self):
         for stage in self.stages:

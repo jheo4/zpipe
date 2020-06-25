@@ -2,6 +2,7 @@ import zmq
 import multiprocessing
 from worker import Worker
 from ztypes import *
+from threading import Thread
 import os, time
 
 
@@ -39,28 +40,17 @@ class Stage(multiprocessing.Process):
         self.build_outlink()
         self.build_inlinks()
 
-        args = {}
-        while True:
-            if self.stage_type is not SRC:
-                # inlinks with dependencies (blocking)
-                for inlink, dep_and_pos in zip(self.inlinks.keys(), self.inlinks.values()):
-                    if dep_and_pos[DEPENDENCY] is True:
-                        args[dep_and_pos[POSITION]] = inlink.recv_pyobj()
-                        print(type(args[dep_and_pos[POSITION]]))
+        if self.stage_type is not SRC:
+            inlink_thread = Thread(target=self.get_inlinks)
+            inlink_thread.start()
+        if self.stage_type is not DST:
+            outlink_thread = Thread(target=self.put_outlink)
+            outlink_thread.start()
 
-                # inlinks without dependencies (nonblocking)
-                ready_inlinks = dict(self.inlink_poller.poll(1))
-                for inlink, dep_and_pos in zip(self.inlinks.keys(), self.inlinks.values()):
-                    if inlink in ready_inlinks:
-                        args[dep_and_pos[POSITION]] = inlink.recv_pyobj()
-                self.in_queue.put(args)
-
-            result = self.out_queue.get()
-            #print("result for outlink ", result)
-
-            if self.stage_type is not DST:
-                self.outlink.send_pyobj(result)
-            time.sleep(1)
+        if self.stage_type is not SRC:
+            inlink_thread.join()
+        if self.stage_type is not DST:
+            outlink_thread.join()
 
 
     def set_outlink(self, port):
@@ -103,3 +93,30 @@ class Stage(multiprocessing.Process):
                 if dep_and_pos[DEPENDENCY] is False:
                     self.inlink_poller.register(inlink, zmq.POLLIN)
                 self.inlinks[inlink] = dep_and_pos
+
+    def get_inlinks(self):
+        """
+        get inputs from inlinks of other stages and put inputs into the worker queue
+        """
+        args = {}
+        while True:
+            # inlinks with dependencies (blocking)
+            for inlink, dep_and_pos in zip(self.inlinks.keys(), self.inlinks.values()):
+                if dep_and_pos[DEPENDENCY] is True:
+                    args[dep_and_pos[POSITION]] = inlink.recv_pyobj()
+
+            # inlinks without dependencies (nonblocking)
+            ready_inlinks = dict(self.inlink_poller.poll(1))
+            for inlink, dep_and_pos in zip(self.inlinks.keys(), self.inlinks.values()):
+                if inlink in ready_inlinks:
+                    args[dep_and_pos[POSITION]] = inlink.recv_pyobj()
+            self.in_queue.put(args)
+
+    def put_outlink(self):
+        """
+        get an output from worker queue and put it into the outlink
+        """
+        while True:
+            result = self.out_queue.get()
+            if self.stage_type is not DST:
+                self.outlink.send_pyobj(result)
