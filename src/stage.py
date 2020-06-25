@@ -1,5 +1,6 @@
 import zmq
 import multiprocessing
+from worker import Worker
 from ztypes import *
 import os, time
 
@@ -10,19 +11,21 @@ class Stage(multiprocessing.Process):
             self.outlink.close()
 
 
-    def init(self, worker_cls, worker_num, cls_args, stage_type=NOR):
+    def init(self, worker_cls=Worker, worker_num=1, cls_args=None, stage_type=NOR,
+             itype=None, otype=None):
         # Workers
         self.worker_cls = worker_cls
         self.cls_args = cls_args
         self.worker_num = worker_num
         self.workers = []
 
-        # Worker link
+        # Worker queue
         self.in_queue = multiprocessing.Queue()
         self.out_queue = multiprocessing.Queue()
 
         # Stage
         self.stage_type = stage_type
+        self.itype = itype; self.otype = otype
         self.context = zmq.Context()
         self.outlink_port = None
         self.outlink = None
@@ -42,22 +45,21 @@ class Stage(multiprocessing.Process):
                 # inlinks with dependencies (blocking)
                 for inlink, dep_and_pos in zip(self.inlinks.keys(), self.inlinks.values()):
                     if dep_and_pos[DEPENDENCY] is True:
-                        args[dep_and_pos[POSITION]] = inlink.recv()
-                        print(args)
+                        args[dep_and_pos[POSITION]] = inlink.recv_pyobj()
+                        print(type(args[dep_and_pos[POSITION]]))
 
                 # inlinks without dependencies (nonblocking)
                 ready_inlinks = dict(self.inlink_poller.poll(1))
                 for inlink, dep_and_pos in zip(self.inlinks.keys(), self.inlinks.values()):
                     if inlink in ready_inlinks:
-                        args[dep_and_pos[POSITION]] = inlink.recv()
-                        print(args)
+                        args[dep_and_pos[POSITION]] = inlink.recv_pyobj()
                 self.in_queue.put(args)
 
             result = self.out_queue.get()
-            print("result for outlink ", result)
+            #print("result for outlink ", result)
 
             if self.stage_type is not DST:
-                self.outlink.send(result)
+                self.outlink.send_pyobj(result)
             time.sleep(1)
 
 
@@ -72,8 +74,10 @@ class Stage(multiprocessing.Process):
         """
         build outlink socket as a publisher in the stage subprocess
         """
-        self.outlink = self.context.socket(zmq.PUB)
-        self.outlink.bind("tcp://*:" + str(self.outlink_port))
+        if self.stage_type is not DST:
+            self.outlink = self.context.socket(zmq.PUB)
+            print(self.outlink_port)
+            self.outlink.bind("tcp://*:" + str(self.outlink_port))
 
 
     def add_inlink(self, port, dependency=False, arg_pos=0):

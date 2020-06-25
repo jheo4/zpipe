@@ -5,12 +5,12 @@ import os, time
 
 class Worker(multiprocessing.Process):
     @classmethod
-    def make(cls, args, in_queue, out_queue, num_workers, stage_type):
+    def make(cls, cls_args, in_queue, out_queue, num_workers, stage_type):
         workers = []
         for idx in range(num_workers):
             worker = cls()
             worker.init_queues(in_queue, out_queue, stage_type)
-            worker.init_class(args)
+            worker.init_class(cls_args)
             workers.append(worker)
 
         for worker in workers:
@@ -22,7 +22,6 @@ class Worker(multiprocessing.Process):
             in_args = None
             if self.stage_type is not SRC:
                 in_args = self.in_queue.get()
-                print(in_args)
             out_res = self.run_class(in_args)
             self.out_queue.put(out_res)
 
