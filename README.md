@@ -1,3 +1,2 @@
-![Logo](./documents/logo.png)
-# zpipe
+# ZPIPE ![Logo](./documents/logo.png)
 Python pipeline framework with ZMQ
