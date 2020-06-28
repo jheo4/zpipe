@@ -1,5 +1,5 @@
 import multiprocessing
-from ztypes import *
+from zpipe.utils.ztypes import *
 import os, time
 
 
