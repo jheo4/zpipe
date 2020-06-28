@@ -2,7 +2,7 @@ import zmq
 import multiprocessing
 from zpipe.worker import Worker
 from zpipe.stages.stage import Stage
-from utils.ztypes import *
+from zpipe.utils.ztypes import *
 from threading import Thread
 import os, time
 
