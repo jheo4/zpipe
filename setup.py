@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="pyzpipe",
-    version="0.1.2",
+    version="0.2",
     license='MIT',
     author='Jin Heo',
     author_email='993jin@gmail.com',
