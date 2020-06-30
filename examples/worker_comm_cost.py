@@ -8,9 +8,9 @@ import cv2
 
 class CamSource(Worker):
     def init_class(self, cls_args):
-        self.dev = cv2.VideoCapture(2)
-        width = 1920
-        height = 1080
+        self.dev = cv2.VideoCapture(cls_args['dev_idx'])
+        width = cls_args['width']
+        height = cls_args['height']
         self.dev.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.dev.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         _, self.frame = self.dev.read()
@@ -51,22 +51,22 @@ stage2 = WorkerStage()
 stage3 = WorkerStage()
 stage4 = WorkerStage()
 
-cam_source_args = {'width':1280, 'height':720, 'fps':30, 'dev_idx':2}
+cam_source_args = {'width':1280, 'height':720, 'dev_idx':2}
 stage1.init(worker_cls=CamSource, worker_num=1, cls_args=cam_source_args, stage_type=SRC,
-            itypes=[None], otype='FRAME')
+            itypes=[None], otype=PYOBJ)
 stage2.init(worker_cls=Mid, worker_num=1, cls_args=None, stage_type=NOR,
-            itypes=['FRAME'], otype='FRAME')
+            itypes=[PYOBJ], otype=PYOBJ)
 stage3.init(worker_cls=Mid, worker_num=1, cls_args=None, stage_type=NOR,
-            itypes=['FRAME'], otype='FRAME')
+            itypes=[PYOBJ], otype=PYOBJ)
 stage4.init(worker_cls=Sink, worker_num=1, cls_args=None, stage_type=DST,
-            itypes=['FRAME'], otype='None')
+            itypes=[PYOBJ], otype=PYOBJ)
 
 test.add_stage(stage1)
 test.add_stage(stage2)
 test.add_stage(stage3)
 test.add_stage(stage4)
 
-test.link_stages(stage1, stage2, dependency=True, arg_pos=0)
-test.link_stages(stage2, stage3, dependency=True, arg_pos=0)
-test.link_stages(stage3, stage4, dependency=True, arg_pos=0)
+test.link_stages(stage1, stage2, dependency=True, arg_pos=0, conflate=False)
+test.link_stages(stage2, stage3, dependency=True, arg_pos=0, conflate=False)
+test.link_stages(stage3, stage4, dependency=True, arg_pos=0, conflate=False)
 test.start()
