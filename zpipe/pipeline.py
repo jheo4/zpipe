@@ -23,7 +23,7 @@ class Pipeline():
         self.stages.append(stage)
 
 
-    def link_stages(self, src, dst, dependency, arg_pos):
+    def link_stages(self, src, dst, dependency, arg_pos, conflate):
         if src.stage_type is DST:
             print("dst cannot be the source of a linkage")
             return
@@ -38,7 +38,7 @@ class Pipeline():
             return
 
         print("listen to ", src.outlink_port, " by ", dst.stage_type)
-        dst.add_inlink(port=src.outlink_port, dependency=dependency, arg_pos=arg_pos)
+        dst.add_inlink(port=src.outlink_port, dependency=dependency, arg_pos=arg_pos, conflate=conflate)
 
 
     def start(self):
