@@ -47,15 +47,21 @@ class NonWorkerStage(Stage):
             # read inlinks
             if self.stage_type is not SRC:
                 # inlinks with dependencies (blocking)
-                for inlink, dep_and_pos in zip(self.inlinks.keys(), self.inlinks.values()):
-                    if dep_and_pos[DEPENDENCY] is True:
-                        args[dep_and_pos[POSITION]] = inlink.recv_pyobj()
+                for inlink, dep_pos_conf in zip(self.inlinks.keys(), self.inlinks.values()):
+                    if dep_pos_conf[DEPENDENCY] is True:
+                        if self.itypes[dep_pos_conf[POSITION]] is PYOBJ:
+                            args[dep_pos_conf[POSITION]] = inlink.recv_pyobj()
+                        elif self.itypes[dep_pos_conf[POSITION]] is BYTES:
+                            args[dep_pos_conf[POSITION]] = inlink.recv_multipart(copy=False)
 
                 # inlinks without dependencies (nonblocking)
                 ready_inlinks = dict(self.inlink_poller.poll(1))
-                for inlink, dep_and_pos in zip(self.inlinks.keys(), self.inlinks.values()):
+                for inlink, dep_pos_conf in zip(self.inlinks.keys(), self.inlinks.values()):
                     if inlink in ready_inlinks:
-                        args[dep_and_pos[POSITION]] = inlink.recv_pyobj()
+                        if self.itypes[dep_pos_conf[POSITION]] is PYOBJ:
+                            args[dep_pos_conf[POSITION]] = inlink.recv_pyobj()
+                        elif self.itypes[dep_pos_conf[POSITION]] is BYTES:
+                            args[dep_pos_conf[POSITION]] = inlink.recv_multipart(copy=False)
 
             # run class functionality
             #st = time.time()
@@ -67,7 +73,10 @@ class NonWorkerStage(Stage):
             # put the output to outputlinks
             if self.stage_type is not DST:
                 print("frame start from src!")
-                self.outlink.send_pyobj(result)
+                if self.otype is PYOBJ:
+                    self.outlink.send_pyobj(result)
+                elif self.otype is BYTES:
+                    self.outlink.send_multipart(result, copy=False)
 
 
     def set_outlink(self, port):
@@ -88,14 +97,14 @@ class NonWorkerStage(Stage):
             print("build outlink tcp://0.0.0.0:" + str(self.outlink_port), " by ", self.stage_type)
 
 
-    def add_inlink(self, port, dependency=False, arg_pos=0):
+    def add_inlink(self, port, dependency=False, arg_pos=0, conflate=True):
         """
         add inlink dependency to build inlinks in the subprocess
         """
         if self.stage_type is SRC:
             print("src cannot not have inlink")
         else:
-            self.inlink_info[port] = [dependency, arg_pos]
+            self.inlink_info[port] = [dependency, arg_pos, conflate]
 
 
     def build_inlinks(self):
@@ -103,12 +112,13 @@ class NonWorkerStage(Stage):
         build inlink sockets (subscribers) in the stage subprocess
         """
         if self.stage_type is not SRC:
-            for port, dep_and_pos in zip(self.inlink_info.keys(), self.inlink_info.values()):
+            for port, dep_pos_conf in zip(self.inlink_info.keys(), self.inlink_info.values()):
                 inlink = self.context.socket(zmq.SUB)
                 inlink.setsockopt_string(zmq.SUBSCRIBE, '')
-                inlink.setsockopt(zmq.CONFLATE, 1)
+                if dep_pos_conf[CONFLATE] is True:
+                    inlink.setsockopt(zmq.CONFLATE, 1)
                 inlink.connect("tcp://0.0.0.0:" + str(port))
                 print("build inlinks tcp://0.0.0.0:" + str(port), " by ", self.stage_type)
-                if dep_and_pos[DEPENDENCY] is False:
+                if dep_pos_conf[DEPENDENCY] is False:
                     self.inlink_poller.register(inlink, zmq.POLLIN)
-                self.inlinks[inlink] = dep_and_pos
+                self.inlinks[inlink] = dep_pos_conf
