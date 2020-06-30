@@ -18,9 +18,9 @@ setuptools.setup(
     ],
     install_requires=['numpy', 'pyzmq', ],
     extras_require={
-          "pyopencv": ['opencv-python>=3.4.2', 'opencv-contrib-python>=3.4.2'],
-          "vidgear": ['vidgear>=0.1.8'],
-          "dev": ["flake8>=3.7.9", "black>=19.10b0", "pytest>=5.4.1"],
-          },
+        "pyopencv": ['opencv-python>=3.4.2', 'opencv-contrib-python>=3.4.2'],
+        "vidgear": ['vidgear>=0.1.8'],
+        "dev": ["flake8>=3.7.9", "black>=19.10b0", "pytest>=5.4.1"],
+        },
 )
 
