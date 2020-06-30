@@ -5,10 +5,13 @@ from zpipe.utils.ztypes import *
 import time
 import cv2
 
-
 class CamSource(Worker):
     def init_class(self, cls_args):
-        self.dev = cv2.VideoCapture(2)
+        self.dev = cv2.VideoCapture(cls_args['dev_idx'])
+        width = cls_args['width']
+        height = cls_args['height']
+        self.dev.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        self.dev.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
     def run_class(self, args):
         ret, frame = self.dev.read()
@@ -35,14 +38,14 @@ test = Pipeline(port_base=10000, max_ports=100)
 
 stage1 = WorkerStage()
 stage2 = WorkerStage()
-cam_source_args = {'width':1280, 'height':720, 'fps':30, 'dev_idx':2}
+cam_source_args = {'width':1280, 'height':720, 'dev_idx':2}
 stage1.init(worker_cls=CamSource, worker_num=1, cls_args=cam_source_args, stage_type=SRC,
-            itypes=[None], otype='FRAME')
+            itypes=[None], otype=PYOBJ)
 stage2.init(worker_cls=Sink, worker_num=1, cls_args=None, stage_type=DST,
-            itypes=['FRAME'], otype='None')
+            itypes=[PYOBJ], otype=None)
 
 test.add_stage(stage1)
 test.add_stage(stage2)
 
-test.link_stages(stage1, stage2, dependency=True, arg_pos=0)
+test.link_stages(stage1, stage2, dependency=True, arg_pos=0, conflate=True)
 test.start()

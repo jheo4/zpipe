@@ -63,21 +63,21 @@ stage22 = NonWorkerStage()
 stage3 = NonWorkerStage()
 cam_source_args = {'width':1280, 'height':720, 'fps':30, 'dev_idx':2}
 stage1.init(stage_cls=CamSource, cls_args=cam_source_args, stage_type=SRC,
-            itypes=[None], otype='FRAME')
+            itypes=[None], otype=PYOBJ)
 stage2.init(stage_cls=Mid, cls_args=None, stage_type=NOR,
-            itypes=['FRAME'], otype='FRAME')
+            itypes=[PYOBJ], otype=PYOBJ)
 stage22.init(stage_cls=Mid, cls_args=None, stage_type=NOR,
-            itypes=['FRAME'], otype='FRAME')
+            itypes=[PYOBJ], otype=PYOBJ)
 stage3.init(stage_cls=Sink, cls_args=None, stage_type=DST,
-            itypes=['FRAME'], otype='None')
+            itypes=[PYOBJ], otype=None)
 
 test.add_stage(stage1)
 test.add_stage(stage2)
 test.add_stage(stage22)
 test.add_stage(stage3)
 
-test.link_stages(stage1, stage2, dependency=True, arg_pos=0)
-test.link_stages(stage1, stage22, dependency=True, arg_pos=0)
-test.link_stages(stage2, stage3, dependency=True, arg_pos=0)
-test.link_stages(stage22, stage3, dependency=True, arg_pos=1)
+test.link_stages(stage1, stage2, dependency=True, arg_pos=0, conflate=False)
+test.link_stages(stage1, stage22, dependency=True, arg_pos=0, conflate=False)
+test.link_stages(stage2, stage3, dependency=True, arg_pos=0, conflate=False)
+test.link_stages(stage22, stage3, dependency=True, arg_pos=1, conflate=False)
 test.start()
