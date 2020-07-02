@@ -9,9 +9,8 @@ import os, time
 
 class NonWorkerStage(Stage):
     def __del__(self):
-        for outlink in self.outlinks:
-            if outlink:
-                self.outlink.close()
+        if self.outlink is not None:
+            self.outlink.close()
 
 
     def init(self, stage_cls=None, cls_args=None, stage_type=NOR,
@@ -25,8 +24,7 @@ class NonWorkerStage(Stage):
         self.stage_type = stage_type
         self.itypes = itypes; self.otype = otype
 
-        self.outlinks = []
-        self.outlink_ports = []
+        self.outlink = None
 
         self.inlinks = {}
         self.inlink_info = {}

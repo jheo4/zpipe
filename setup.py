@@ -2,11 +2,11 @@ import setuptools
 
 setuptools.setup(
     name="pyzpipe",
-    version="0.2",
+    version="0.2.2",
     license='MIT',
     author='Jin Heo',
     author_email='993jin@gmail.com',
-    description='Concurrent and parallel pipeline framework using ZMQ',
+    description='Concurrent and parallel pipeline framework with zero-copy IPC',
     long_description=open('README.md').read(),
     url='https://github.com/jheo4/zpipe',
     python_requires=">=3.6",
@@ -14,6 +14,8 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
+        "TOPIC :: System :: Distributed Computing",
+        "TOPIC :: System :: Parallel Computing",
         "Operating System :: OS Independent"
     ],
     install_requires=['numpy', 'pyzmq', ],
