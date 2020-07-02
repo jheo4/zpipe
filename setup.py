@@ -14,8 +14,6 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "TOPIC :: System :: Distributed Computing",
-        "TOPIC :: System :: Parallel Computing",
         "Operating System :: OS Independent"
     ],
     install_requires=['numpy', 'pyzmq', ],
